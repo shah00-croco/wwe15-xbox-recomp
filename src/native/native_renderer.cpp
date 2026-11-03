@@ -447,6 +447,7 @@ void ReadDeviceState(uint8_t* base, uint32_t dev, NativeDrawState& state) {
   state.stencil_ref_mask_bf = REX_LOAD_U32(dev + 0x28CC + (0x210C - 0x2100) * 4);
   state.blend_control = REX_LOAD_U32(dev + 0x2938);
   state.color_control = REX_LOAD_U32(dev + 0x293C);
+  state.mode_control = REX_LOAD_U32(dev + 0x2948);
   state.surface_info = REX_LOAD_U32(dev + 0x2880);
   state.color_info = REX_LOAD_U32(dev + 0x2884);
   for (uint32_t i = 0; i < 6; ++i) {

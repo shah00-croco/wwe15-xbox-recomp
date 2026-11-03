@@ -343,6 +343,7 @@ enum class AlphaTest { kOff, kOn, kRejectAll };
 // The shaders only implement clip(alpha - threshold), which is alpha >= ref.
 // kGreater is treated the same; the other functions are not supported yet.
 constexpr uint32_t kAlphaToMaskBit = 1u << 4;  // RB_COLORCONTROL alpha_to_mask_enable
+constexpr uint32_t kCullBits = 0x7;  // PA_SU_SC_MODE_CNTL cull_front, cull_back, face
 
 AlphaTest GetAlphaTest(const NativeDrawState& state) {
   reg::RB_COLORCONTROL color_control;
@@ -1795,7 +1796,8 @@ class VulkanCore {
     for (const auto& stream : state.streams) key = Fnv1a(&stream.stride, 4, key);
     key = Fnv1a(&topology, sizeof(topology), key);
     const bool stencil = state.depth_control & 1;
-    const uint32_t render_state[7] = {state.blend_control,
+    const uint32_t render_state[8] = {state.blend_control,
+                                      state.mode_control & kCullBits,
                                       state.color_mask & 0xF,
                                       uint32_t(GetAlphaTest(state)),
                                       state.color_control & kAlphaToMaskBit,
@@ -1891,7 +1893,12 @@ class VulkanCore {
     VkPipelineRasterizationStateCreateInfo raster{
         VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
     raster.polygonMode = VK_POLYGON_MODE_FILL;
-    raster.cullMode = VK_CULL_MODE_NONE;
+    // PA_SU_SC_MODE_CNTL: bit 0 culls front faces, bit 1 back faces, bit 2
+    // makes clockwise triangles the front ones.
+    raster.cullMode = ((state.mode_control & 1) ? VK_CULL_MODE_FRONT_BIT : 0) |
+                      ((state.mode_control & 2) ? VK_CULL_MODE_BACK_BIT : 0);
+    raster.frontFace = (state.mode_control & 4) ? VK_FRONT_FACE_CLOCKWISE
+                                                : VK_FRONT_FACE_COUNTER_CLOCKWISE;
     raster.lineWidth = 1.0f;
     VkPipelineMultisampleStateCreateInfo multisample{
         VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
@@ -1932,10 +1939,10 @@ class VulkanCore {
       return VK_NULL_HANDLE;
     }
     REXGPU_INFO("[native] pipeline vs {:016X} ps {:016X}: blend {:08X} color control {:08X} "
-                "mask {:X} alpha ref {:08X} depth control {:08X}",
+                "mask {:X} alpha ref {:08X} depth control {:08X} cull {:X}",
                 state.vertex_shader, state.pixel_shader, state.blend_control,
                 state.color_control, state.color_mask & 0xF, state.alpha_ref,
-                state.depth_control);
+                state.depth_control, state.mode_control & kCullBits);
     return pipeline;
   }
 
@@ -2073,7 +2080,8 @@ class VulkanCore {
       case xenos::TextureFormat::k_DXT2_3:
       case xenos::TextureFormat::k_DXT4_5: block = 4; block_bytes = 16; break;
       case xenos::TextureFormat::k_8_8_8_8:
-      case xenos::TextureFormat::k_16_16: break;
+      case xenos::TextureFormat::k_16_16:
+      case xenos::TextureFormat::k_32_FLOAT: break;
       case xenos::TextureFormat::k_8: block_bytes = 1; break;
       case xenos::TextureFormat::k_16_16_16_16: block_bytes = 8; break;
       default: return hash;
@@ -2187,6 +2195,7 @@ class VulkanCore {
       case xenos::TextureFormat::k_DXT4_5: format = VK_FORMAT_BC3_UNORM_BLOCK; block = 4; block_bytes = 16; break;
       case xenos::TextureFormat::k_8_8_8_8: format = VK_FORMAT_R8G8B8A8_UNORM; break;
       case xenos::TextureFormat::k_8: format = VK_FORMAT_R8_UNORM; block_bytes = 1; break;
+      case xenos::TextureFormat::k_32_FLOAT: format = VK_FORMAT_R32_SFLOAT; break;
       // 16-bit components: signed X picks SNORM for all (section 20.16).
       case xenos::TextureFormat::k_16_16:
         format = fetch.sign_x == xenos::TextureSign::kSigned ? VK_FORMAT_R16G16_SNORM
@@ -2274,7 +2283,8 @@ class VulkanCore {
     view_info.image = texture.image;
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     view_info.format = format;
-    const bool single_channel = fetch.format == xenos::TextureFormat::k_8;
+    const bool single_channel = fetch.format == xenos::TextureFormat::k_8 ||
+                                fetch.format == xenos::TextureFormat::k_32_FLOAT;
     view_info.components = {ViewSwizzle(fetch.swizzle, 0, single_channel),
                             ViewSwizzle(fetch.swizzle, 1, single_channel),
                             ViewSwizzle(fetch.swizzle, 2, single_channel),
@@ -2286,7 +2296,8 @@ class VulkanCore {
 
   // Guest fetch swizzle (3 bits per component, XE_GPU_TEXTURE_SWIZZLE) to a view
   // component, as the SDK's GuestToHostSwizzle does. The host formats keep the
-  // guest components in RGBA order, except k_8, whose R8 replicates R.
+  // guest components in RGBA order, except the one-component k_8 and
+  // k_32_FLOAT, whose R replicates.
   static VkComponentSwizzle ViewSwizzle(uint32_t swizzle, uint32_t component,
                                         bool single_channel) {
     const uint32_t guest = (swizzle >> (3 * component)) & 0b111;

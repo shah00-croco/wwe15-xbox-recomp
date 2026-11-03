@@ -58,6 +58,7 @@ struct NativeDrawState {
   uint32_t stencil_ref_mask_bf = 0;  // RB_STENCILREFMASK_BF (back faces)
   uint32_t color_mask = 0xF;   // RB_COLOR_MASK
   uint32_t alpha_ref = 0;      // RB_ALPHA_REF (float bits)
+  uint32_t mode_control = 0;   // PA_SU_SC_MODE_CNTL (face culling)
   // Render target 0 (section 20.5): RB_SURFACE_INFO and RB_COLOR_INFO.
   uint32_t surface_info = 0;
   uint32_t color_info = 0;

@@ -2835,3 +2835,37 @@ resolve's clear.
 
 **Result.** The same burst captures after the fix show no ghost frames (0 of
 60, against 4 of 60 before).
+
+### 20.19 Face culling, k_32_FLOAT, and the k_16_16 byte order (2026-11-04)
+
+**Blank crowd signs: face culling was missing.**
+- The signs in 20.15 were not missing textures. In run 25 at 100 s the
+  "YOU" sign shows its blue text in one triangle, and the rest of the card is
+  plain white. The card has a printed front and a blank back at almost the
+  same depth. With no culling, the back face won the depth test in part of
+  the card.
+- Native drew every triangle with `VK_CULL_MODE_NONE`. The game sets
+  `PA_SU_SC_MODE_CNTL`, which the device mirrors at `+0x2948` (section 20.4):
+  - bit 0 culls front faces;
+  - bit 1 culls back faces;
+  - bit 2 makes clockwise triangles the front ones.
+- The draw state now reads that register. The pipeline sets `cullMode` and
+  `frontFace` from those three bits, and they are part of the pipeline key.
+- In one demo run, 49 pipelines cull nothing, 65 use value 6 (cull back,
+  clockwise front) and 16 use value 2 (cull back, counter-clockwise front).
+  The wrestlers, ring and crowd all still draw, so the winding is the right
+  way round. A "BELIEVE IN THE" sign at 100 s shows all of its text.
+- This run showed a different demo match, so the "YOU" sign itself was not
+  seen again.
+
+**`k_32_FLOAT` textures.** Format 36 is now loaded as `R32_SFLOAT`, 4 bytes
+per texel, through the usual tiling and endian path. Like `k_8`, its view
+repeats R in every component, which matches the SDK's RRRR host swizzle.
+The only one seen so far is a 16×16 texture at `10AFF000` on the loading
+screen. The unsupported-format warning no longer appears.
+
+**`k_16_16` with 8in32: no half swap.** The SDK's Vulkan texture cache
+loads `k_16_16` with its 32-bit-per-texel load shader into `R16G16`. That
+shader swaps each 32-bit word for the fetch's endianness and does nothing
+else. `CreateTexture` does the same, so the open question in 20.16 is closed
+without a change.

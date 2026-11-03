@@ -506,6 +506,7 @@ class VulkanCore {
     if (alpha_test == AlphaTest::kRejectAll) return;
     RenderTarget* target = GetTarget(state.surface_info, state.color_info);
     if (!target) return;
+    ApplyPendingClear(target);
     const Pipeline& pipeline = GetPipeline(state, topology, target->format, target->samples);
     if (pipeline.pipeline == VK_NULL_HANDLE) {
       ++skipped_pipeline_;
@@ -791,6 +792,12 @@ class VulkanCore {
     bool initialized = false;
     bool is_back_buffer = false;
     bool fixed16 = false;  // k_16_16 or k_16_16_16_16, held as half floats
+    // An anti-aliased surface is drawn in tiles that share one EDRAM range,
+    // so a resolve's clear covers the whole screen. It waits until the
+    // target's next draw or clear: later tiles still resolve their part
+    // first (section 20.18).
+    bool tiled = false;
+    ClearValues pending_clear;
     // Anti-aliased targets draw into multisampled images, resolved into image
     // and depth at the end of every render pass (section 20.12).
     VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
@@ -866,6 +873,7 @@ class VulkanCore {
     // surface's sample count, and each tile's resolve copies its part
     // (sections 20.10 and 20.12).
     if (surface.msaa_samples != xenos::MsaaSamples::k1X) {
+      target.tiled = true;
       target.width = std::max(target.width, kBackBufferWidth);
       if (REXCVAR_GET(wwe2k15_native_msaa) && create_render_pass2_) {
         target.samples = surface.msaa_samples == xenos::MsaaSamples::k2X ? VK_SAMPLE_COUNT_2_BIT
@@ -971,6 +979,7 @@ class VulkanCore {
       }
     }
     if (rects.empty()) clear_rects.push_back({{{0, 0}, {target->width, target->height}}, 0, 1});
+    ApplyPendingClear(target);
     if (Dumping()) {
       REXGPU_INFO("[native] clear after draw {}: target {:08X}/{:08X} color {} depth {} z {} "
                   "rects {}",
@@ -1002,6 +1011,14 @@ class VulkanCore {
     }
     device_->functions().vkCmdClearAttachments(command_buffer_, count, attachments.data(),
                                                uint32_t(rects.size()), rects.data());
+  }
+
+  // Clears all of a tiled target with the clear its last resolve left.
+  void ApplyPendingClear(RenderTarget* target) {
+    const ClearValues clear = target->pending_clear;
+    if (!(clear.color || clear.depth || clear.stencil)) return;
+    target->pending_clear = {};
+    ClearRects(target, clear, {{{{0, 0}, {target->width, target->height}}, 0, 1}});
   }
 
  public:
@@ -1038,7 +1055,12 @@ class VulkanCore {
       }
     }
     // D3DRESOLVE_CLEAR*: the resolved part of the target is cleared after the
-    // copy (EDRAM tiles; here the same rect of the whole-screen target).
+    // copy (EDRAM tiles; here the same rect of the whole-screen target). A
+    // tiled target is cleared whole, before its next draw (section 20.18).
+    if (source->tiled) {
+      if (clear.color || clear.depth || clear.stencil) source->pending_clear = clear;
+      return;
+    }
     VkRect2D clear_area;
     if (ClampRect(rect, source->width, source->height, clear_area)) {
       ClearRects(source, clear, {{clear_area, 0, 1}});

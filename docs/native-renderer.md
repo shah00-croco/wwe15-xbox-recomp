@@ -2802,3 +2802,36 @@ found that the emulator, not native, is most likely wrong.
     it `uint4` for packed normals. Without `SPEC_CONSTANT_R11G11B10_NORMAL`,
     `tfetchR11G11B10` returns `asfloat(value)`, so the float bits come
     through unchanged.
+
+### 20.18 Ghost frames in the demo: resolve clears on tiled targets (2026-11-04)
+
+**Symptom.** About once a second the demo showed one frame with a smeared
+copy of another camera on the right part of the screen: many offset copies of
+the wrestlers and the referee, doubled ropes. A 30-shot burst at 100 s and at
+125 s caught 4 such frames. The emulator showed none.
+
+**Cause.** The demo uses two scene paths, chosen by camera:
+- Most frames draw the scene into the 1x target `00500000` (pitch 1280).
+  The game clears it with an explicit clear each frame.
+- Some cameras draw into the 2x anti-aliased target `40280000` (pitch 640),
+  in two tiles. There is no explicit clear. Each frame ends with these
+  resolves:
+  - `(0,0,640,720)` to `0EDC4000`, with D3DRESOLVE_CLEARRENDERTARGET and
+    D3DRESOLVE_CLEARDEPTHSTENCIL;
+  - `(640,0,1280,720)` to `0EDC4000`, without a clear.
+
+On the console both tiles use the same EDRAM range, so the clear on the first
+resolve clears the whole screen for the next frame. Native keeps one
+whole-screen target (section 20.10) and cleared only the resolve's rect, the
+left half. The right half kept the color and depth of every earlier frame on
+that path. When the camera returned to that path, its scene was drawn over
+the old content and tested against the old depth.
+
+**Fix.** A tiled target (`msaa_samples` not 1x) no longer clears on resolve.
+The resolve's clear is stored on the target and applied to the whole target
+before its next draw or explicit clear. It cannot be applied at once, because
+the second tile's resolve still reads the right half after the first
+resolve's clear.
+
+**Result.** The same burst captures after the fix show no ghost frames (0 of
+60, against 4 of 60 before).

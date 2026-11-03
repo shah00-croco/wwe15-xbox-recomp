@@ -56,6 +56,9 @@ REXCVAR_DEFINE_BOOL(wwe2k15_native_renderer, false, "Native",
 REXCVAR_DEFINE_INT32(wwe2k15_native_dump_resolves, 0, "Native",
                      "Save every resolve destination and the back buffer of this frame as "
                      "BMP files in native-dumps/frame-N (0: off)");
+REXCVAR_DEFINE_STRING(wwe2k15_native_dump_address, "", "Native",
+                      "Save every color resolve to this hex address (as the resolve log "
+                      "prints it), in any frame, to native-dumps/frame-N");
 REXCVAR_DEFINE_BOOL(wwe2k15_native_msaa, true, "Native",
                     "Draw anti-aliased render targets with 2x/4x multisampling, as the game "
                     "asks (off: single-sampled)");
@@ -839,9 +842,11 @@ class VulkanCore {
     surface.value = surface_info;
     reg::RB_COLOR_INFO color;
     color.value = color_info;
-    // color_base and color_base_bit_11: the 12-bit EDRAM tile index.
+    // color_base and color_base_bit_11: the 12-bit EDRAM tile index. The
+    // sample count is part of the key: the 4x scene target 05020140 has the
+    // same pitch and tile as the 1x bloom target 05000140 (section 20.17).
     return (color_info & 0xFFF) | (surface.surface_pitch << 12) |
-           (uint32_t(color.color_format) << 26);
+           (uint32_t(color.color_format) << 26) | (uint32_t(surface.msaa_samples) << 30);
   }
 
   RenderTarget* GetTarget(uint32_t surface_info, uint32_t color_info) {
@@ -1236,14 +1241,16 @@ class VulkanCore {
   // Copies image (in SHADER_READ_ONLY_OPTIMAL, 4 bytes per pixel) into a
   // readback buffer; Present writes the file once the frame has finished.
   void DumpImage(VkImage image, VkImageAspectFlags aspect, uint32_t width, uint32_t height,
-                 bool depth, const std::string& name, VkFormat format = kBackBufferFormat) {
-    if (!Dumping()) return;
+                 bool depth, const std::string& name, VkFormat format = kBackBufferFormat,
+                 bool force = false) {
+    if (!Dumping() && !force) return;
     PendingDump dump;
     dump.format = depth ? kDepthTextureFormat : format;
     if (!vk_ui::util::CreateDedicatedAllocationBuffer(
             device_, VkDeviceSize(width) * height * FormatTexelSize(dump.format),
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             vk_ui::util::MemoryPurpose::kReadback, dump.buffer, dump.memory)) {
+      REXGPU_WARN("[native] dump {}: no readback buffer for {}x{}", name, width, height);
       return;
     }
     dump.width = width;
@@ -1420,7 +1427,13 @@ class VulkanCore {
     DumpImage(resolved.texture.image, VK_IMAGE_ASPECT_COLOR_BIT, width, height, false,
               fmt::format("{:08X}-rect-{}x{}+{}+{}", base_address << 12, area.extent.width,
                           area.extent.height, area.offset.x, area.offset.y),
-              format);
+              format, IsDumpAddress(base_address << 12));
+  }
+
+  // --wwe2k15_native_dump_address: one resolve destination, any frame.
+  static bool IsDumpAddress(uint32_t address) {
+    const std::string& text = REXCVAR_GET(wwe2k15_native_dump_address);
+    return !text.empty() && std::strtoul(text.c_str(), nullptr, 16) == address;
   }
 
  private:
@@ -1924,12 +1937,18 @@ class VulkanCore {
         xenos::xe_gpu_texture_fetch_t fetch;
         std::memcpy(&fetch, state.texture_fetch[slot].data(), sizeof(fetch));
         REXGPU_INFO("[native] draw {}: slot {} base {:08X} fmt {} {}x{} tiled {} pitch {} "
-                    "mips {}-{} packed {} swizzle {:03X} mip base {:08X}",
+                    "mips {}-{} packed {} swizzle {:03X} mip base {:08X} clamp {}{}{} "
+                    "border {} filter {}{}{} sign {}{}{}{}",
                     drawn_, slot, fetch.base_address << 12, uint32_t(fetch.format),
                     fetch.size_2d.width + 1, fetch.size_2d.height + 1, uint32_t(fetch.tiled),
                     uint32_t(fetch.pitch), uint32_t(fetch.mip_min_level),
                     uint32_t(fetch.mip_max_level), uint32_t(fetch.packed_mips),
-                    uint32_t(fetch.swizzle), fetch.mip_address << 12);
+                    uint32_t(fetch.swizzle), fetch.mip_address << 12, uint32_t(fetch.clamp_x),
+                    uint32_t(fetch.clamp_y), uint32_t(fetch.clamp_z),
+                    uint32_t(fetch.border_color), uint32_t(fetch.mag_filter),
+                    uint32_t(fetch.min_filter), uint32_t(fetch.mip_filter),
+                    uint32_t(fetch.sign_x), uint32_t(fetch.sign_y), uint32_t(fetch.sign_z),
+                    uint32_t(fetch.sign_w));
         // Linear DXT1 contents as guest memory holds them (endian swap not
         // applied), for offline decoding.
         if (fetch.format == xenos::TextureFormat::k_DXT1 && !fetch.tiled) {

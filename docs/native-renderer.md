@@ -2739,3 +2739,52 @@ was about 26 MB of 32 MB full.
   unknown.
 - **Next unsupported format in the log:** 36 (`k_32_FLOAT`), a 16×16
   texture at 10AFF000 during the loading screen.
+
+### 20.17 MSAA target key, and the crowd brightness against the emulator (2026-11-03)
+
+**Render-target key includes the sample count.**
+- The 4x scene target `05020140` and the 1x bloom target `05000140` share
+  the same EDRAM tile, pitch and format. Without the sample count in the key
+  they mapped to one Vulkan target.
+- `TargetKey` now puts `msaa_samples` in bits 30-31.
+
+**Crowd brightness: native is kept as it is.**
+In native, the far crowd and the arena banners are much brighter than in the
+emulator. In the emulator only the front rows are lit. The investigation
+found that the emulator, not native, is most likely wrong.
+
+- **Scene before post-processing matches.** Average far-crowd brightness
+  (0-255) of the scene copy at `1123D000`: emulator 27, native 29.5.
+  Lightmap, crowd shaders and sampler state were all checked and match.
+- **The composite pass makes the difference.** The fullscreen pass (vs
+  `0E10C1082AA68E1A`, ps `529C3CAB11F399A6`) does depth of field and fog:
+  - It reads depth from slot 3 (`k_24_8_FLOAT`). The range is reversed and
+    very small: 20e4 values of about 0.0017 far and 0.0056 near.
+  - Where `1 - depth > g_f4DOFParam2.x` (about 0.98), it blends toward the
+    320x180 blur in slot 6 (`111C5000`). The factor is clamped to
+    `g_f4DOFParam.w` = 0.8. That covers almost every far pixel.
+  - Fog then adds `g_f4RGB` = (0.4, 0.55, 0.55) with factor
+    `g_fAlpha / (1 - g_fZAdj) * max(1 - g_fZAdj - depth, 0)` (alpha 0.08,
+    ZAdj 0.993). This is the faint blue on the far crowd.
+  - After this pass: emulator 16, native 37.
+- **The emulator's blur targets are black.** With `--readback_resolve=full`,
+  guest memory at `111C5000` and `11201000` (both 320x180 resolves) is zero
+  for rows 0-179. In native they hold a blur of the scene.
+- **The blur shaders can't produce black from a bright input.** ps
+  `9711E46A307F320F` sums 4 taps and multiplies by `c255.x`. ps
+  `024EC8A42A0AB636` sums 13 weighted taps. Neither reads depth.
+  - `c255` is a literal (0.25) in the shader container. XenosRecomp bakes it
+    into the native shader.
+  - The game's constant shadow (device +0x1780) holds 0 in `c255`. The game
+    never writes the literal there.
+  - So the emulator probably reads the register value 0, and its blur comes
+    out black. The far crowd then gets 80% black.
+- **Not checked:** real Xbox 360 output. The conclusion rests on the fact that
+  a 4-tap average of a bright image cannot be black on hardware.
+- **Ruled out on the way:** resolve format, lightmap sampler and border,
+  lightmap content (identical in both), texture sign bits, quad lists, the
+  shader registry, gamma ramp (native already applies the 256-entry table;
+  the front buffer is `k_8_8_8_8`, so the emulator uses the same table).
+- **Open:** native runs crowd vs `56FF28BECF9DB428` (lit) with a vertex
+  declaration that has no `NORMAL0`. The emulator runs an unlit shader for
+  these draws. Which one the game means is not known yet.

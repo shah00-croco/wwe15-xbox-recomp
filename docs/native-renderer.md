@@ -2785,6 +2785,20 @@ found that the emulator, not native, is most likely wrong.
   lightmap content (identical in both), texture sign bits, quad lists, the
   shader registry, gamma ramp (native already applies the 256-entry table;
   the front buffer is `k_8_8_8_8`, so the emulator uses the same table).
-- **Open:** native runs crowd vs `56FF28BECF9DB428` (lit) with a vertex
-  declaration that has no `NORMAL0`. The emulator runs an unlit shader for
-  these draws. Which one the game means is not known yet.
+- **Crowd shader and declaration: checked, correct (2026-11-04).** An
+  earlier note said native runs the lit crowd vs `56FF28BECF9DB428` with a
+  declaration that has no `NORMAL0`. That was wrong. There are two pairs:
+
+  | Vertex shader | Pixel shader | Object | Declaration | Stride | Elements |
+  | --- | --- | --- | --- | --- | --- |
+  | `56FF28BECF9DB428` (lit) | `A78AAAD35075DD6A` | AEE3CC20 | AECFC1B0 | 28 | POSITION0 FLOAT3 @0, NORMAL0 FLOAT3 @12, TEXCOORD0 FLOAT16_2 @24 |
+  | `163D575D6C779A7A` (unlit) | `715D0CD49A1E84B3` | AEE3F210 | AECFC140 | 16 | POSITION0 FLOAT3 @0, TEXCOORD0 FLOAT16_2 @12 |
+
+  - The emulator's `5344BF064B17B7C2` is the unlit shader of the second
+    pair, not a stand-in for the crowd.
+  - The ring trace of frame 5600 (`--wwe2k15_native_trace_frame`) agrees:
+    495 draws sample the lightmap at fetch constant 16 with a 28-byte stride.
+  - Native binds `NORMAL0` as `R32G32B32_UINT`, because the shader declares
+    it `uint4` for packed normals. Without `SPEC_CONSTANT_R11G11B10_NORMAL`,
+    `tfetchR11G11B10` returns `asfloat(value)`, so the float bits come
+    through unchanged.

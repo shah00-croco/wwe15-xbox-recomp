@@ -432,7 +432,10 @@ void ReadDeviceState(uint8_t* base, uint32_t dev, NativeDrawState& state) {
   // Boolean constants: SetVertexShaderConstantB (82BA2FF0) sets bit n % 32 of
   // dword 0x9E0 + n / 32 (+0x2780); pixel shader booleans follow from dword
   // 0x9E4 (+0x2790, b128 onwards as on the GPU). The loop constants follow
-  // them (+0x27A0), like SHADER_CONSTANT_LOOP_00-31 after the booleans.
+  // them, like SHADER_CONSTANT_LOOP_00-31 after the booleans:
+  // SetVertexShaderConstantI (82BA30B0) writes i0-i15 to +0x27A0 and
+  // SetPixelShaderConstantI (82BA3108) to +0x27E0 (loops 16-31), each as
+  // count | start << 8 | step << 16 from the int4's x, y and z.
   state.vertex_bools = REX_LOAD_U32(dev + 0x2780);
   state.pixel_bools = REX_LOAD_U32(dev + 0x2790);
   for (uint32_t i = 0; i < 32; ++i) state.loop_constants[i] = REX_LOAD_U32(dev + 0x27A0 + i * 4);

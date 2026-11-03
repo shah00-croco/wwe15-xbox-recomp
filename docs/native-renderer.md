@@ -2706,3 +2706,36 @@ was about 26 MB of 32 MB full.
   without the cache. The log shows two 512×512 textures in formats 25
   (`k_16_16`) and 26 (`k_16_16_16_16`) that `CreateTexture` does not
   support yet. They are the likely cause. Not fixed yet.
+
+### 20.16 16-bit textures and the loop constants (2026-11-03)
+
+**Loop constant address: checked.**
+- `SetVertexShaderConstantI` (82BA30B0) writes `i0`–`i15` to device
+  +0x27A0. `SetPixelShaderConstantI` (82BA3108) writes them to +0x27E0, which
+  are loops 16–31.
+- Each constant is stored as `count | start << 8 | step << 16`. These come
+  from the low bytes of the int4's x, y and z.
+- Then both functions set bit 56 of the dirty mask at +0x20.
+- This matches what `NativeOnIndexedDraw` already reads: 32 dwords from
+  +0x27A0. The inference in 20.10 was right, and the code didn't change.
+
+**Texture formats 25 and 26.**
+- `CreateTexture` now loads `k_16_16` as `R16G16` and `k_16_16_16_16` as
+  `R16G16B16A16`. Both are UNORM, or SNORM when sign X is signed. Both go
+  through the usual tiling and endian path.
+- The demo binds two of them when the match starts:
+
+| Address | Format | Size | Signs | Swizzle | Endian | Tiled |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1F6FF000 | 25 | 512×512 | unsigned | X, Y, 1, 1 | 8in32 | yes |
+| 1F7FF000 | 26 | 512×512 | unsigned | XYZW | 8in16 | yes |
+
+- **Not checked:** whether format 25 with 8in32 needs its 16-bit halves
+  swapped, like the vertex components in 20.12. The texture is loaded
+  without that swap, which is how the SDK reads it.
+- **Picture:** no change that stands out. The crowd sign at 100 s still
+  shows mostly white, with part of its blue text. So these two textures
+  were not the cause of the blank signs. What they hold in the scene is
+  unknown.
+- **Next unsupported format in the log:** 36 (`k_32_FLOAT`), a 16×16
+  texture at 10AFF000 during the loading screen.

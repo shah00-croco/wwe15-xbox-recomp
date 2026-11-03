@@ -2031,8 +2031,10 @@ class VulkanCore {
       case xenos::TextureFormat::k_DXT1: block = 4; block_bytes = 8; break;
       case xenos::TextureFormat::k_DXT2_3:
       case xenos::TextureFormat::k_DXT4_5: block = 4; block_bytes = 16; break;
-      case xenos::TextureFormat::k_8_8_8_8: break;
+      case xenos::TextureFormat::k_8_8_8_8:
+      case xenos::TextureFormat::k_16_16: break;
       case xenos::TextureFormat::k_8: block_bytes = 1; break;
+      case xenos::TextureFormat::k_16_16_16_16: block_bytes = 8; break;
       default: return hash;
     }
     const uint32_t width = fetch.size_2d.width + 1, height = fetch.size_2d.height + 1;
@@ -2144,6 +2146,16 @@ class VulkanCore {
       case xenos::TextureFormat::k_DXT4_5: format = VK_FORMAT_BC3_UNORM_BLOCK; block = 4; block_bytes = 16; break;
       case xenos::TextureFormat::k_8_8_8_8: format = VK_FORMAT_R8G8B8A8_UNORM; break;
       case xenos::TextureFormat::k_8: format = VK_FORMAT_R8_UNORM; block_bytes = 1; break;
+      // 16-bit components: signed X picks SNORM for all (section 20.16).
+      case xenos::TextureFormat::k_16_16:
+        format = fetch.sign_x == xenos::TextureSign::kSigned ? VK_FORMAT_R16G16_SNORM
+                                                             : VK_FORMAT_R16G16_UNORM;
+        break;
+      case xenos::TextureFormat::k_16_16_16_16:
+        format = fetch.sign_x == xenos::TextureSign::kSigned ? VK_FORMAT_R16G16B16A16_SNORM
+                                                             : VK_FORMAT_R16G16B16A16_UNORM;
+        block_bytes = 8;
+        break;
       default:
         if (unsupported_formats_.insert(uint32_t(fetch.format)).second) {
           REXGPU_WARN("[native] unsupported texture format {} ({}x{} at {:08X})",
@@ -2153,6 +2165,15 @@ class VulkanCore {
         return texture;
     }
     const uint32_t width = fetch.size_2d.width + 1, height = fetch.size_2d.height + 1;
+    if (fetch.format == xenos::TextureFormat::k_16_16 ||
+        fetch.format == xenos::TextureFormat::k_16_16_16_16) {
+      REXGPU_INFO("[native] 16-bit texture {:08X}: format {} {}x{} sign {}{}{}{} int {} exp {} "
+                  "swizzle {:03X} endian {} tiled {}",
+                  fetch.base_address << 12, uint32_t(fetch.format), width, height,
+                  uint32_t(fetch.sign_x), uint32_t(fetch.sign_y), uint32_t(fetch.sign_z),
+                  uint32_t(fetch.sign_w), uint32_t(fetch.num_format), int32_t(fetch.exp_adjust),
+                  uint32_t(fetch.swizzle), uint32_t(fetch.endianness), uint32_t(fetch.tiled));
+    }
     const uint32_t blocks_x = (width + block - 1) / block, blocks_y = (height + block - 1) / block;
     // The base level of a small tiled texture with packed mips sits inside the
     // mip tail; not handled yet.

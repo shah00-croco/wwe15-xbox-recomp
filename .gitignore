@@ -1,0 +1,12 @@
+# Game content never enters this repository: players extract their own copy.
+/assets/
+# Code generated from the game executable is derived game content too.
+/generated/default/
+# Local toolchain, extractor and build products.
+/.tools/
+/out/
+# Runtime logs and caches.
+logs/
+*.log
+__pycache__/
+*.rdc

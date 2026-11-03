@@ -1,0 +1,1405 @@
+[
+ {
+  "address": "0x8226708C",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF460",
+  "preceding_word": "0x48000054",
+  "kind": "entry_only",
+  "walk": "hit pad at 822672BC before a terminator",
+  "walk_end": null
+ },
+ {
+  "address": "0x82267204",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF470",
+  "preceding_word": "0x48000010",
+  "kind": "entry_only",
+  "walk": "hit pad at 822672BC before a terminator",
+  "walk_end": null
+ },
+ {
+  "address": "0x82280EC0",
+  "pointer_refs": 3,
+  "first_ref": "0x82003938",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "hit pad at 82280ECC before a terminator",
+  "walk_end": null
+ },
+ {
+  "address": "0x82281920",
+  "pointer_refs": 1,
+  "first_ref": "0x82004710",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 12,
+  "walk": "clean"
+ },
+ {
+  "address": "0x822C26E8",
+  "pointer_refs": 1,
+  "first_ref": "0x82006E78",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x8234F450",
+  "pointer_refs": 1,
+  "first_ref": "0x835709B4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F460",
+  "pointer_refs": 1,
+  "first_ref": "0x835708F4",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F470"
+ },
+ {
+  "address": "0x8234F4C0",
+  "pointer_refs": 1,
+  "first_ref": "0x835709D4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F4D0",
+  "pointer_refs": 1,
+  "first_ref": "0x835708CC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F4E0"
+ },
+ {
+  "address": "0x8234F530",
+  "pointer_refs": 1,
+  "first_ref": "0x835709FC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F540",
+  "pointer_refs": 1,
+  "first_ref": "0x83570904",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F550"
+ },
+ {
+  "address": "0x8234F5A0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A1C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F5B0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570924",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F5C0"
+ },
+ {
+  "address": "0x8234F610",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A3C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F620",
+  "pointer_refs": 1,
+  "first_ref": "0x83570944",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F630"
+ },
+ {
+  "address": "0x8234F670",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A5C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F680",
+  "pointer_refs": 1,
+  "first_ref": "0x83570964",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F690"
+ },
+ {
+  "address": "0x8234F6D0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A7C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F6E0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570984",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F6F0"
+ },
+ {
+  "address": "0x8234F730",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A9C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F740",
+  "pointer_refs": 1,
+  "first_ref": "0x8357099C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F750",
+  "pointer_refs": 1,
+  "first_ref": "0x835708AC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F760"
+ },
+ {
+  "address": "0x8234F7A0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570AA4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F7B0",
+  "pointer_refs": 1,
+  "first_ref": "0x835709BC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F7C0",
+  "pointer_refs": 1,
+  "first_ref": "0x835708FC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F7D0"
+ },
+ {
+  "address": "0x8234F820",
+  "pointer_refs": 1,
+  "first_ref": "0x835709E4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F830",
+  "pointer_refs": 1,
+  "first_ref": "0x835708D4",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F840"
+ },
+ {
+  "address": "0x8234F890",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A04",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F8A0",
+  "pointer_refs": 1,
+  "first_ref": "0x8357090C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F8B0"
+ },
+ {
+  "address": "0x8234F900",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A24",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F910",
+  "pointer_refs": 1,
+  "first_ref": "0x8357092C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F920"
+ },
+ {
+  "address": "0x8234F960",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A44",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F970",
+  "pointer_refs": 1,
+  "first_ref": "0x8357094C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F980"
+ },
+ {
+  "address": "0x8234F9C0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A64",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234F9D0",
+  "pointer_refs": 1,
+  "first_ref": "0x8357096C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234F9E0"
+ },
+ {
+  "address": "0x8234FA20",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A84",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FA30",
+  "pointer_refs": 1,
+  "first_ref": "0x8357098C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FA40",
+  "pointer_refs": 1,
+  "first_ref": "0x83570894",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FA50"
+ },
+ {
+  "address": "0x8234FAA0",
+  "pointer_refs": 1,
+  "first_ref": "0x835709A4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FAB0",
+  "pointer_refs": 1,
+  "first_ref": "0x835708B4",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FAC0"
+ },
+ {
+  "address": "0x8234FB00",
+  "pointer_refs": 1,
+  "first_ref": "0x83570AAC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FB10",
+  "pointer_refs": 1,
+  "first_ref": "0x835709C4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FB20",
+  "pointer_refs": 1,
+  "first_ref": "0x835708BC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FB30"
+ },
+ {
+  "address": "0x8234FB80",
+  "pointer_refs": 1,
+  "first_ref": "0x835709EC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FB90",
+  "pointer_refs": 1,
+  "first_ref": "0x835708DC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FBA0"
+ },
+ {
+  "address": "0x8234FBF0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A0C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FC00",
+  "pointer_refs": 1,
+  "first_ref": "0x83570914",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FC10"
+ },
+ {
+  "address": "0x8234FC60",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A2C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FC70",
+  "pointer_refs": 1,
+  "first_ref": "0x83570934",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FC80"
+ },
+ {
+  "address": "0x8234FCC0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A4C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FCD0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570954",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FCE0"
+ },
+ {
+  "address": "0x8234FD20",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A6C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FD30",
+  "pointer_refs": 1,
+  "first_ref": "0x83570974",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FD40"
+ },
+ {
+  "address": "0x8234FD80",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A8C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FD90",
+  "pointer_refs": 1,
+  "first_ref": "0x835709DC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FDA0",
+  "pointer_refs": 1,
+  "first_ref": "0x8357089C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FDB0"
+ },
+ {
+  "address": "0x8234FE00",
+  "pointer_refs": 1,
+  "first_ref": "0x835709AC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FE10",
+  "pointer_refs": 1,
+  "first_ref": "0x835708EC",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FE20"
+ },
+ {
+  "address": "0x8234FE60",
+  "pointer_refs": 1,
+  "first_ref": "0x83570AB4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FE70",
+  "pointer_refs": 1,
+  "first_ref": "0x835709CC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FE80",
+  "pointer_refs": 1,
+  "first_ref": "0x835708C4",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FE90"
+ },
+ {
+  "address": "0x8234FEE0",
+  "pointer_refs": 1,
+  "first_ref": "0x835709F4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FEF0",
+  "pointer_refs": 1,
+  "first_ref": "0x835708E4",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FF00"
+ },
+ {
+  "address": "0x8234FF50",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A14",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FF60",
+  "pointer_refs": 1,
+  "first_ref": "0x8357091C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FF70"
+ },
+ {
+  "address": "0x8234FFC0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A34",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8234FFD0",
+  "pointer_refs": 1,
+  "first_ref": "0x8357093C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x8234FFE0"
+ },
+ {
+  "address": "0x82350020",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A54",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82350030",
+  "pointer_refs": 1,
+  "first_ref": "0x8357095C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x82350040"
+ },
+ {
+  "address": "0x82350080",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A74",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82350090",
+  "pointer_refs": 1,
+  "first_ref": "0x8357097C",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x823500A0"
+ },
+ {
+  "address": "0x823500E0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570A94",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x823500F0",
+  "pointer_refs": 1,
+  "first_ref": "0x83570994",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82350100",
+  "pointer_refs": 1,
+  "first_ref": "0x835708A4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82435038",
+  "pointer_refs": 1,
+  "first_ref": "0x82011114",
+  "preceding_word": "0x4BF5F7F4",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x824700C8",
+  "pointer_refs": 2,
+  "first_ref": "0x82001950",
+  "preceding_word": "0x4BFFFF34",
+  "kind": "leaf_walk",
+  "size": 20,
+  "walk": "clean"
+ },
+ {
+  "address": "0x824F1B80",
+  "pointer_refs": 2,
+  "first_ref": "0x82018F28",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 44,
+  "walk": "clean"
+ },
+ {
+  "address": "0x825B8B70",
+  "pointer_refs": 1,
+  "first_ref": "0x8201C4F8",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x827742D0",
+  "pointer_refs": 1,
+  "first_ref": "0x82030758",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x827984A0",
+  "pointer_refs": 1,
+  "first_ref": "0x82032CD0",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x827E70F8",
+  "pointer_refs": 1,
+  "first_ref": "0x82036B08",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 20,
+  "walk": "clean"
+ },
+ {
+  "address": "0x827E8F70",
+  "pointer_refs": 1,
+  "first_ref": "0x82036E2C",
+  "preceding_word": "0x48012D4C",
+  "kind": "entry_only",
+  "walk": "hit pad at 827E90E4 before a terminator",
+  "walk_end": null
+ },
+ {
+  "address": "0x827E8F78",
+  "pointer_refs": 1,
+  "first_ref": "0x82036DE8",
+  "preceding_word": "0x48012D7C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x827EE9B8",
+  "pointer_refs": 1,
+  "first_ref": "0x82037F50",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x827EE9D0",
+  "pointer_refs": 1,
+  "first_ref": "0x82037F58",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x827F2490",
+  "pointer_refs": 1,
+  "first_ref": "0x820380E4",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82815790",
+  "pointer_refs": 1,
+  "first_ref": "0x8203BE3C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 40,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8284AB58",
+  "pointer_refs": 1,
+  "first_ref": "0x820402CC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 104,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82866990",
+  "pointer_refs": 35,
+  "first_ref": "0x8200626C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x828669A0",
+  "pointer_refs": 1,
+  "first_ref": "0x820423EC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 32,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82867C90",
+  "pointer_refs": 1,
+  "first_ref": "0x820424E0",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x828B56B0",
+  "pointer_refs": 43,
+  "first_ref": "0x82045248",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 12,
+  "walk": "clean"
+ },
+ {
+  "address": "0x828DB048",
+  "pointer_refs": 1,
+  "first_ref": "0x820479C8",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 64,
+  "walk": "clean"
+ },
+ {
+  "address": "0x828F5D10",
+  "pointer_refs": 2,
+  "first_ref": "0x82048EA8",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x828F5D20",
+  "pointer_refs": 1,
+  "first_ref": "0x82048EDC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 52,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8290A508",
+  "pointer_refs": 1,
+  "first_ref": "0x8204C444",
+  "preceding_word": "0x4801B44C",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82910288",
+  "pointer_refs": 1,
+  "first_ref": "0x8204D250",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x829118C0",
+  "pointer_refs": 2,
+  "first_ref": "0x820479B4",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82937718",
+  "pointer_refs": 10,
+  "first_ref": "0x8200C4C4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82937728",
+  "pointer_refs": 3,
+  "first_ref": "0x8200C4F4",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82937738",
+  "pointer_refs": 3,
+  "first_ref": "0x8200C4F8",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82937748",
+  "pointer_refs": 1,
+  "first_ref": "0x82050BC8",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x829378B0",
+  "pointer_refs": 1,
+  "first_ref": "0x82050C9C",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 4,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8298F328",
+  "pointer_refs": 1,
+  "first_ref": "0x820530C4",
+  "preceding_word": "0x481B6FB4",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82AB1B38",
+  "pointer_refs": 1,
+  "first_ref": "0x8205E718",
+  "preceding_word": "0x4BFFFFD8",
+  "kind": "leaf_walk",
+  "size": 136,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82AC03C0",
+  "pointer_refs": 3,
+  "first_ref": "0x8205F234",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 32,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82B582C4",
+  "pointer_refs": 2,
+  "first_ref": "0x8206E310",
+  "preceding_word": "0x4800000C",
+  "kind": "entry_only",
+  "walk": "conditional branch at 82B58358 leaves the function backwards",
+  "walk_end": null
+ },
+ {
+  "address": "0x82B74A84",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF650",
+  "preceding_word": "0x4BFFFF48",
+  "kind": "leaf_walk",
+  "size": 40,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82B76CFC",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF688",
+  "preceding_word": "0x48000024",
+  "kind": "leaf_walk",
+  "size": 52,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82B7B728",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF710",
+  "preceding_word": "0x4BFFFF8C",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C10CF0",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF860",
+  "preceding_word": "0x48000014",
+  "kind": "leaf_walk",
+  "size": 52,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C13180",
+  "pointer_refs": 1,
+  "first_ref": "0x82087AA0",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C155C0",
+  "pointer_refs": 1,
+  "first_ref": "0x82087B9C",
+  "preceding_word": "0x4BFFFF1C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C155D0",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B98",
+  "preceding_word": "0x4BFFFF34",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C155D8",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B58",
+  "preceding_word": "0x4800533C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C155E0",
+  "pointer_refs": 3,
+  "first_ref": "0x82087BBC",
+  "preceding_word": "0x4BFFFF04",
+  "kind": "leaf_walk",
+  "size": 88,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C15638",
+  "pointer_refs": 3,
+  "first_ref": "0x82087B50",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A930",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B94",
+  "preceding_word": "0x480013AC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A938",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B78",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A940",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B5C",
+  "preceding_word": "0x4800138C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A948",
+  "pointer_refs": 1,
+  "first_ref": "0x82087F0C",
+  "preceding_word": "0x4BFFFFA4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A958",
+  "pointer_refs": 2,
+  "first_ref": "0x82087EF0",
+  "preceding_word": "0x4BFFFFAC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A960",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B6C",
+  "preceding_word": "0x4BFFFF9C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A968",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B70",
+  "preceding_word": "0x4BFFAB8C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1A970",
+  "pointer_refs": 1,
+  "first_ref": "0x82087F2C",
+  "preceding_word": "0x4BFFFF84",
+  "kind": "leaf_walk",
+  "size": 244,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C1BCF0",
+  "pointer_refs": 1,
+  "first_ref": "0x82087F84",
+  "preceding_word": "0x4BFF980C",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD00",
+  "pointer_refs": 2,
+  "first_ref": "0x82087EC0",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD08",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B68",
+  "preceding_word": "0x4BFFEBDC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD10",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B90",
+  "preceding_word": "0x4BFFFFB4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD18",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B64",
+  "preceding_word": "0x4BFFFFCC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD20",
+  "pointer_refs": 5,
+  "first_ref": "0x82087B60",
+  "preceding_word": "0x4BFF97CC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1BD28",
+  "pointer_refs": 1,
+  "first_ref": "0x82087FA4",
+  "preceding_word": "0x4BFFFF94",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x82C1BE24"
+ },
+ {
+  "address": "0x82C1C480",
+  "pointer_refs": 1,
+  "first_ref": "0x820880AC",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C1D100",
+  "pointer_refs": 1,
+  "first_ref": "0x82088044",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1DE58",
+  "pointer_refs": 1,
+  "first_ref": "0x820880F4",
+  "preceding_word": "0x4BFFFFD4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C1DE60",
+  "pointer_refs": 1,
+  "first_ref": "0x82088104",
+  "preceding_word": "0x4BFFFFCC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C20D38",
+  "pointer_refs": 1,
+  "first_ref": "0x820882CC",
+  "preceding_word": "0x4BFFFFEC",
+  "kind": "entry_only",
+  "walk": "hit pad at 82C20D6C before a terminator",
+  "walk_end": null
+ },
+ {
+  "address": "0x82C2A948",
+  "pointer_refs": 2,
+  "first_ref": "0x821CF870",
+  "preceding_word": "0x4800000C",
+  "kind": "leaf_walk",
+  "size": 32,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C2D4C0",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF890",
+  "preceding_word": "0x48000014",
+  "kind": "leaf_walk",
+  "size": 244,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82C2E770",
+  "pointer_refs": 2,
+  "first_ref": "0x8208C0F8",
+  "preceding_word": "0x4BFFFEFC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C2ECE8",
+  "pointer_refs": 2,
+  "first_ref": "0x8208C0E0",
+  "preceding_word": "0x4BFFFDC4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C2ECF8",
+  "pointer_refs": 1,
+  "first_ref": "0x8208C154",
+  "preceding_word": "0x4BFFFDAC",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82C30540",
+  "pointer_refs": 2,
+  "first_ref": "0x8208C0F0",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x82DF0868",
+  "pointer_refs": 3,
+  "first_ref": "0x820F2BC8",
+  "preceding_word": "0x4E800420",
+  "kind": "entry_only",
+  "walk": "clean",
+  "walk_end": "0x82DF0888"
+ },
+ {
+  "address": "0x82DFF138",
+  "pointer_refs": 1,
+  "first_ref": "0x820F39C4",
+  "preceding_word": "0x4BFE66EC",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82DFF330",
+  "pointer_refs": 1,
+  "first_ref": "0x820F3A0C",
+  "preceding_word": "0x4BFE64F4",
+  "kind": "leaf_walk",
+  "size": 16,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82E328D0",
+  "pointer_refs": 1,
+  "first_ref": "0x8210DA18",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 376,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82E51EB0",
+  "pointer_refs": 1,
+  "first_ref": "0x82110884",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 156,
+  "walk": "clean"
+ },
+ {
+  "address": "0x82E52B40",
+  "pointer_refs": 1,
+  "first_ref": "0x821108F8",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 44,
+  "walk": "clean"
+ },
+ {
+  "address": "0x83000BB8",
+  "pointer_refs": 2,
+  "first_ref": "0x8208AD80",
+  "preceding_word": "0x48000028",
+  "kind": "leaf_walk",
+  "size": 7860,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8303DC18",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF8F0",
+  "preceding_word": "0x48000008",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x83068304",
+  "pointer_refs": 1,
+  "first_ref": "0x835C77E8",
+  "preceding_word": "0x48000084",
+  "kind": "leaf_walk",
+  "size": 1044,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8327D4F8",
+  "pointer_refs": 1,
+  "first_ref": "0x821AD174",
+  "preceding_word": "0x4E800420",
+  "kind": "leaf_walk",
+  "size": 36,
+  "walk": "clean"
+ },
+ {
+  "address": "0x832F70F8",
+  "pointer_refs": 1,
+  "first_ref": "0x821B52B0",
+  "preceding_word": "0x4BFFFFE4",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x8331D0B0",
+  "pointer_refs": 1,
+  "first_ref": "0x821B5C34",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x83320808",
+  "pointer_refs": 1,
+  "first_ref": "0x821B5F00",
+  "preceding_word": "0x4BFE3EDC",
+  "kind": "leaf_walk",
+  "size": 20,
+  "walk": "clean"
+ },
+ {
+  "address": "0x8336F838",
+  "pointer_refs": 1,
+  "first_ref": "0x821B985C",
+  "preceding_word": "0x4E800420",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x833B04E4",
+  "pointer_refs": 1,
+  "first_ref": "0x821CF928",
+  "preceding_word": "0x4BFFFF74",
+  "kind": "leaf_walk",
+  "size": 24,
+  "walk": "clean"
+ },
+ {
+  "address": "0x833FE898",
+  "pointer_refs": 1,
+  "first_ref": "0x821BF9FC",
+  "preceding_word": "0x4BFFFF84",
+  "kind": "adjustor_thunk",
+  "size": 8
+ },
+ {
+  "address": "0x83455738",
+  "pointer_refs": 1,
+  "first_ref": "0x83566218",
+  "preceding_word": "0x4BFFF96C",
+  "kind": "leaf_walk",
+  "size": 12,
+  "walk": "clean"
+ }
+]

@@ -1,0 +1,354 @@
+diff --git a/XenosRecomp/shader_common.h b/XenosRecomp/shader_common.h
+index 1c74034..37c3e2e 100644
+--- a/XenosRecomp/shader_common.h
++++ b/XenosRecomp/shader_common.h
+@@ -15,21 +15,35 @@
+ #define FLT_MIN asfloat(0xff7fffff)
+ #define FLT_MAX asfloat(0x7f7fffff)
+ 
+-#ifdef __spirv__
+-
+-struct PushConstants
+-{
+-    uint64_t VertexShaderConstants;
+-    uint64_t PixelShaderConstants;
+-    uint64_t SharedConstants;
+-};
++// WWE 2K15: vertex shaders may fetch textures; implicit-LOD sampling is only
++// allowed in pixel shaders, so vertex shaders sample mip level 0.
++#ifdef XENOS_VERTEX_SHADER
++#define XENOS_SAMPLE(texture, samplerState, coord) (texture).SampleLevel(samplerState, coord, 0)
++#else
++#define XENOS_SAMPLE(texture, samplerState, coord) (texture).Sample(samplerState, coord)
++#endif
+ 
+-[[vk::push_constant]] ConstantBuffer<PushConstants> g_PushConstants;
++#ifdef __spirv__
+ 
+-#define g_Booleans                 vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + 256)
+-#define g_SwappedTexcoords         vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + 260)
+-#define g_HalfPixelOffset          vk::RawBufferLoad<float2>(g_PushConstants.SharedConstants + 264)
+-#define g_AlphaThreshold           vk::RawBufferLoad<float>(g_PushConstants.SharedConstants + 272)
++// WWE 2K15: plain storage buffers instead of buffer device addresses, so the
++// shaders run on a Vulkan device without bufferDeviceAddress or shaderInt64.
++// Set 0: vertex constants, pixel constants, shared constants (layout in
++// docs/native-renderer.md, section 18).
++[[vk::binding(0, 0)]] ByteAddressBuffer g_VertexShaderConstantsBuffer;
++[[vk::binding(1, 0)]] ByteAddressBuffer g_PixelShaderConstantsBuffer;
++[[vk::binding(2, 0)]] ByteAddressBuffer g_SharedConstantsBuffer;
++
++#define g_Booleans                 g_SharedConstantsBuffer.Load(512)
++#define g_SwappedTexcoords         g_SharedConstantsBuffer.Load(516)
++#define g_HalfPixelOffset          asfloat(g_SharedConstantsBuffer.Load2(520))
++#define g_AlphaThreshold           asfloat(g_SharedConstantsBuffer.Load(528))
++// WWE 2K15: multiplies oPos.xy before the half-pixel offset is added, so the
++// renderer can map screen-space positions (viewport transform off) to clip
++// space. 1, 1 for normal draws.
++#define g_PositionScale            asfloat(g_SharedConstantsBuffer.Load2(536))
++// WWE 2K15: multiplies oC0 after the alpha test, for render targets the
++// renderer stores scaled (1/32 for the -32...32 fixed formats). 1 otherwise.
++#define g_OutputScale              asfloat(g_SharedConstantsBuffer.Load(544))
+ 
+ [[vk::constant_id(0)]] const uint g_SpecConstants = 0;
+ 
+@@ -43,14 +57,27 @@ struct PushConstants
+     float2 g_HalfPixelOffset : packoffset(c16.z); \
+     float g_AlphaThreshold : packoffset(c17.x);
+ 
++#define g_PositionScale float2(1, 1)
++#define g_OutputScale 1.0
++
+ uint g_SpecConstants();
+ 
+ #endif
+ 
++#ifdef __spirv__
++// WWE 2K15: one slot per texture fetch constant (0-31) in set 1. The generated
++// code indexes these with compile-time constants, so no descriptor indexing
++// features are needed.
++[[vk::binding(0, 1)]] Texture2D<float4> g_Texture2DDescriptorHeap[32];
++[[vk::binding(1, 1)]] Texture3D<float4> g_Texture3DDescriptorHeap[32];
++[[vk::binding(2, 1)]] TextureCube<float4> g_TextureCubeDescriptorHeap[32];
++[[vk::binding(3, 1)]] SamplerState g_SamplerDescriptorHeap[32];
++#else
+ Texture2D<float4> g_Texture2DDescriptorHeap[] : register(t0, space0);
+ Texture3D<float4> g_Texture3DDescriptorHeap[] : register(t0, space1);
+ TextureCube<float4> g_TextureCubeDescriptorHeap[] : register(t0, space2);
+ SamplerState g_SamplerDescriptorHeap[] : register(s0, space3);
++#endif
+ 
+ uint2 getTexture2DDimensions(Texture2D<float4> texture)
+ {
+@@ -62,7 +89,7 @@ uint2 getTexture2DDimensions(Texture2D<float4> texture)
+ float4 tfetch2D(uint resourceDescriptorIndex, uint samplerDescriptorIndex, float2 texCoord, float2 offset)
+ {
+     Texture2D<float4> texture = g_Texture2DDescriptorHeap[resourceDescriptorIndex];
+-    return texture.Sample(g_SamplerDescriptorHeap[samplerDescriptorIndex], texCoord + offset / getTexture2DDimensions(texture));
++    return XENOS_SAMPLE(texture, g_SamplerDescriptorHeap[samplerDescriptorIndex], texCoord + offset / getTexture2DDimensions(texture));
+ }
+ 
+ float2 getWeights2D(uint resourceDescriptorIndex, uint samplerDescriptorIndex, float2 texCoord, float2 offset)
+@@ -135,17 +162,17 @@ float4 tfetch2DBicubic(uint resourceDescriptorIndex, uint samplerDescriptorIndex
+     float h1y = h1(fy);
+ 
+     float4 r =
+-        g0(fy) * (g0x * texture.Sample(samplerState, float2(px + h0x, py + h0y) / float2(dimensions)) +
+-            g1x * texture.Sample(samplerState, float2(px + h1x, py + h0y) / float2(dimensions))) +
+-        g1(fy) * (g0x * texture.Sample(samplerState, float2(px + h0x, py + h1y) / float2(dimensions)) +
+-            g1x * texture.Sample(samplerState, float2(px + h1x, py + h1y) / float2(dimensions)));
++        g0(fy) * (g0x * XENOS_SAMPLE(texture, samplerState, float2(px + h0x, py + h0y) / float2(dimensions)) +
++            g1x * XENOS_SAMPLE(texture, samplerState, float2(px + h1x, py + h0y) / float2(dimensions))) +
++        g1(fy) * (g0x * XENOS_SAMPLE(texture, samplerState, float2(px + h0x, py + h1y) / float2(dimensions)) +
++            g1x * XENOS_SAMPLE(texture, samplerState, float2(px + h1x, py + h1y) / float2(dimensions)));
+ 
+     return r;
+ }
+ 
+ float4 tfetch3D(uint resourceDescriptorIndex, uint samplerDescriptorIndex, float3 texCoord)
+ {
+-    return g_Texture3DDescriptorHeap[resourceDescriptorIndex].Sample(g_SamplerDescriptorHeap[samplerDescriptorIndex], texCoord);
++    return XENOS_SAMPLE(g_Texture3DDescriptorHeap[resourceDescriptorIndex], g_SamplerDescriptorHeap[samplerDescriptorIndex], texCoord);
+ }
+ 
+ struct CubeMapData
+@@ -156,7 +183,7 @@ struct CubeMapData
+ 
+ float4 tfetchCube(uint resourceDescriptorIndex, uint samplerDescriptorIndex, float3 texCoord, inout CubeMapData cubeMapData)
+ {
+-    return g_TextureCubeDescriptorHeap[resourceDescriptorIndex].Sample(g_SamplerDescriptorHeap[samplerDescriptorIndex], cubeMapData.cubeMapDirections[texCoord.z]);
++    return XENOS_SAMPLE(g_TextureCubeDescriptorHeap[resourceDescriptorIndex], g_SamplerDescriptorHeap[samplerDescriptorIndex], cubeMapData.cubeMapDirections[texCoord.z]);
+ }
+ 
+ float4 tfetchR11G11B10(uint4 value)
+@@ -177,7 +204,7 @@ float4 tfetchR11G11B10(uint4 value)
+ 
+ float4 tfetchTexcoord(uint swappedTexcoords, float4 value, uint semanticIndex)
+ {
+-    return (swappedTexcoords & (1ull << semanticIndex)) != 0 ? value.yxwz : value;
++    return (swappedTexcoords & (1u << semanticIndex)) != 0 ? value.yxwz : value;
+ }
+ 
+ float4 cube(float4 value, inout CubeMapData cubeMapData)
+diff --git a/XenosRecomp/shader_recompiler.cpp b/XenosRecomp/shader_recompiler.cpp
+index 698a418..567b28f 100644
+--- a/XenosRecomp/shader_recompiler.cpp
++++ b/XenosRecomp/shader_recompiler.cpp
+@@ -1,3 +1,5 @@
++#include <regex>
++#include <set>
+ #include "shader_recompiler.h"
+ #include "shader_common.h"
+ 
+@@ -115,7 +117,15 @@ static constexpr std::pair<DeclUsage, size_t> INTERPOLATORS[] =
+     { DeclUsage::TexCoord, 14 },
+     { DeclUsage::TexCoord, 15 },
+     { DeclUsage::Color, 0 },
+-    { DeclUsage::Color, 1 }
++    { DeclUsage::Color, 1 },
++    // WWE 2K15 also passes these between vertex and pixel shaders.
++    { DeclUsage::Color, 2 },
++    { DeclUsage::Color, 3 },
++    { DeclUsage::Normal, 0 },
++    { DeclUsage::Tangent, 0 },
++    { DeclUsage::Binormal, 0 },
++    { DeclUsage::Position, 0 },
++    { DeclUsage::Fog, 0 }
+ };
+ 
+ static constexpr std::string_view TEXTURE_DIMENSIONS[] = 
+@@ -1098,6 +1108,88 @@ void ShaderRecompiler::recompile(const AluInstruction& instr)
+     }
+ }
+ 
++// WWE 2K15: some shaders use float/int constants and texture fetch constants
++// that have no entry in their constant table. Declare them as raw loads from
++// the constant buffers (SPIR-V; DXIL gets zero placeholders for now).
++// WWE 2K15: rewrite the generated SPIR-V constant reads from buffer device
++// addresses to the storage buffers in shader_common.h, and texture/sampler
++// descriptor indices to the fetch constant number itself (set 1 has one slot
++// per fetch constant).
++static void convertToStorageBufferBindings(std::string& out)
++{
++    static const std::regex floatLoad(R"(vk::RawBufferLoad<float4>\(g_PushConstants\.(Vertex|Pixel)ShaderConstants \+ (.+?), 0x10\))");
++    out = std::regex_replace(out, floatLoad, "asfloat(g_$1ShaderConstantsBuffer.Load4($2))");
++
++    static const std::regex intLoad(R"(vk::RawBufferLoad<int4>\(g_PushConstants\.SharedConstants \+ (\d+)\))");
++    out = std::regex_replace(out, intLoad, "asint(g_SharedConstantsBuffer.Load4($1))");
++
++    static const std::regex indexLoad(R"(vk::RawBufferLoad<uint>\(g_PushConstants\.SharedConstants \+ (\d+)\))");
++    std::string result;
++    auto begin = out.cbegin();
++    for (std::sregex_iterator it(out.begin(), out.end(), indexLoad), end; it != end; ++it)
++    {
++        uint32_t offset = uint32_t(std::stoul((*it)[1].str()));
++        uint32_t fetchConstant = offset < 384 ? (offset % 128) / 4 : (offset - 384) / 4;
++        result.append(begin, out.cbegin() + it->position());
++        result += std::to_string(fetchConstant);
++        begin = out.cbegin() + it->position() + it->length();
++    }
++    result.append(begin, out.cend());
++    out = std::move(result);
++}
++
++static void addUnnamedRegisterFallbacks(std::string& out, bool isPixelShader)
++{
++    size_t mainPos = out.find("void main(");
++    if (mainPos == std::string::npos)
++        return;
++
++    auto collect = [&](const std::regex& use, const char* declFormat)
++    {
++        std::set<uint32_t> regs;
++        for (auto it = std::sregex_iterator(out.begin() + mainPos, out.end(), use); it != std::sregex_iterator(); ++it)
++        {
++            uint32_t reg = uint32_t(std::stoul((*it)[1].str()));
++            if (out.find(fmt::format(fmt::runtime(declFormat), reg)) == std::string::npos)
++                regs.insert(reg);
++        }
++        return regs;
++    };
++
++    auto floatRegs = collect(std::regex(R"(\bc(\d+)\b)"), "float4 c{} =");
++    auto intRegs = collect(std::regex(R"(\bi(\d+)\b)"), "int4 i{} =");
++    auto samplerRegs = collect(std::regex(R"(\bs(\d+)_(?:Texture(?:2D|3D|Cube)|Sampler)DescriptorIndex\b)"), "#define s{}_SamplerDescriptorIndex");
++
++    if (floatRegs.empty() && intRegs.empty() && samplerRegs.empty())
++        return;
++
++    std::string block = "#ifdef __spirv__\n";
++    for (uint32_t reg : floatRegs)
++        block += fmt::format("#define c{} vk::RawBufferLoad<float4>(g_PushConstants.{}ShaderConstants + {}, 0x10)\n", reg, isPixelShader ? "Pixel" : "Vertex", reg * 16);
++    for (uint32_t reg : intRegs)
++        block += fmt::format("#define i{} vk::RawBufferLoad<int4>(g_PushConstants.SharedConstants + {})\n", reg, 1024 + reg * 16);
++    for (uint32_t reg : samplerRegs)
++    {
++        for (size_t j = 0; j < std::size(TEXTURE_DIMENSIONS); j++)
++            block += fmt::format("#define s{}_Texture{}DescriptorIndex vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + {})\n", reg, TEXTURE_DIMENSIONS[j], j * 128 + reg * 4);
++        block += fmt::format("#define s{}_SamplerDescriptorIndex vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + {})\n", reg, std::size(TEXTURE_DIMENSIONS) * 128 + reg * 4);
++    }
++    block += "#else\n";
++    for (uint32_t reg : floatRegs)
++        block += fmt::format("#define c{} float4(0.0, 0.0, 0.0, 0.0)\n", reg);
++    for (uint32_t reg : intRegs)
++        block += fmt::format("#define i{} int4(0, 0, 0, 0)\n", reg);
++    for (uint32_t reg : samplerRegs)
++    {
++        for (size_t j = 0; j < std::size(TEXTURE_DIMENSIONS); j++)
++            block += fmt::format("#define s{}_Texture{}DescriptorIndex 0\n", reg, TEXTURE_DIMENSIONS[j]);
++        block += fmt::format("#define s{}_SamplerDescriptorIndex 0\n", reg);
++    }
++    block += "#endif\n";
++
++    out.insert(mainPos, block);
++}
++
+ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_view& include)
+ {
+     const auto shaderContainer = reinterpret_cast<const ShaderContainer*>(shaderData);
+@@ -1105,10 +1197,15 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+     assert((shaderContainer->flags & 0xFFFFFF00) == 0x102A1100);
+     assert(shaderContainer->constantTableOffset != NULL);
+ 
++    isPixelShader = (shaderContainer->flags & 0x1) == 0;
++
++    // WWE 2K15: lets shader_common.h sample a fixed mip level in vertex shaders.
++    if (!isPixelShader)
++        out += "#define XENOS_VERTEX_SHADER\n";
++
+     out += include;
+     out += '\n';
+ 
+-    isPixelShader = (shaderContainer->flags & 0x1) == 0;
+ 
+     const auto constantTableContainer = reinterpret_cast<const ConstantTableContainer*>(shaderData + shaderContainer->constantTableOffset);
+     constantTableData = reinterpret_cast<const uint8_t*>(&constantTableContainer->constantTable);
+@@ -1174,11 +1271,11 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+             for (size_t j = 0; j < std::size(TEXTURE_DIMENSIONS); j++)
+             {
+                 println("#define {}_Texture{}DescriptorIndex vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + {})",
+-                    constantName, TEXTURE_DIMENSIONS[j], j * 64 + constantInfo->registerIndex * 4);
++                    constantName, TEXTURE_DIMENSIONS[j], j * 128 + constantInfo->registerIndex * 4);
+             }
+ 
+             println("#define {}_SamplerDescriptorIndex vk::RawBufferLoad<uint>(g_PushConstants.SharedConstants + {})",
+-                constantName, std::size(TEXTURE_DIMENSIONS) * 64 + constantInfo->registerIndex * 4);
++                constantName, std::size(TEXTURE_DIMENSIONS) * 128 + constantInfo->registerIndex * 4);
+ 
+             samplers.emplace(constantInfo->registerIndex, constantName);
+             break;
+@@ -1302,6 +1399,7 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+     else
+     {
+         auto vertexShader = reinterpret_cast<const VertexShader*>(shader);
++        uint32_t extraVertexInputLocations = 0;
+         for (uint32_t i = 0; i < vertexShader->vertexElementCount; i++)
+         {
+             union
+@@ -1324,15 +1422,22 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+ 
+             out += '\t';
+ 
++            bool hasLocation = false;
+             for (auto& usageLocation : USAGE_LOCATIONS)
+             {
+                 if (usageLocation.usage == vertexElement.usage && usageLocation.usageIndex == vertexElement.usageIndex)
+                 {
+                     print("[[vk::location({})]] ", usageLocation.location);
++                    hasLocation = true;
+                     break;
+                 }
+             }
+ 
++            // WWE 2K15: usages outside the table get locations after it, since
++            // Vulkan needs a location on every input once one is explicit.
++            if (!hasLocation)
++                print("[[vk::location({})]] ", 16 + extraVertexInputLocations++);
++
+             println("in {0} i{1}{2} : {3}{2},", usageType, USAGE_VARIABLES[uint32_t(vertexElement.usage)],
+                 uint32_t(vertexElement.usageIndex), USAGE_SEMANTICS[uint32_t(vertexElement.usage)]);
+ 
+@@ -1418,7 +1523,7 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+         out += "\n";
+     }
+ 
+-    bool printedRegisters[32]{};
++    bool printedRegisters[128]{};
+ 
+     uint32_t interpolatorCount = (shader->interpolatorInfo >> 5) & 0x1F;
+ 
+@@ -1457,7 +1562,7 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+         out += "\n";
+     }
+ 
+-    for (size_t i = 0; i < 32; i++)
++    for (size_t i = 0; i < 128; i++)
+     {
+         if (!printedRegisters[i])
+         {
+@@ -1809,6 +1914,9 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+                     indent();
+                     out += "}";
+ 
++                    indent();
++                    out += "oC0 *= g_OutputScale;";
++
+                 #ifdef UNLEASHED_RECOMP
+                     specConstantsMask |= SPEC_CONSTANT_ALPHA_TO_COVERAGE;
+ 
+@@ -1832,7 +1940,7 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+                     if (!hasMtxProjection)
+                 #endif
+                     {
+-                        out += "\toPos.xy += g_HalfPixelOffset * oPos.w;\n";
++                        out += "\toPos.xy = oPos.xy * g_PositionScale + g_HalfPixelOffset * oPos.w;\n";
+                     }
+                 }
+ 
+@@ -1885,4 +1993,7 @@ void ShaderRecompiler::recompile(const uint8_t* shaderData, const std::string_vi
+ #endif
+ 
+     out += "}";
++
++    addUnnamedRegisterFallbacks(out, isPixelShader);
++    convertToStorageBufferBindings(out);
+ }

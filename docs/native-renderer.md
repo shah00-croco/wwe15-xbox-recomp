@@ -2869,3 +2869,33 @@ loads `k_16_16` with its 32-bit-per-texel load shader into `R16G16`. That
 shader swaps each 32-bit word for the fetch's endianness and does nothing
 else. `CreateTexture` does the same, so the open question in 20.16 is closed
 without a change.
+
+### 20.20 Texture mip levels (2026-11-04)
+
+Native used to load only the base level of each texture. Distant crowd and
+ring textures sparkled, and textures whose base level sits inside a packed
+mip tail drew a placeholder.
+
+**Layout.** The game target does not link the SDK's `texture_util`, so
+`CreateTexture` ports the 2D part of it:
+- The base level is at `base_address`, with the fetch constant's pitch.
+- Levels 1 and up start at `mip_address`. Level `n` is stored as
+  `next_pow2(size) >> n` texels, rounded up to 32 blocks. Linear rows are
+  aligned to 256 bytes, and each level is padded to 4 KB.
+- With `packed_mips` set, the small levels share one packed tail. The tail
+  is stored at level `log2ceil(min(w, h)) - 4` (or 0 when that is not above
+  4). Each level inside it sits at the offset `GetPackedMipOffset` gives,
+  converted from texels to blocks.
+- The number of levels is `1 + min(mip_max_level, log2(max(w, h)))`, and
+  only when the fetch has a `mip_address`.
+
+Each level is read through the same tiling and endian path as the base
+level and copied with its own `VkBufferImageCopy`. The image view covers all
+levels.
+
+**Result.** In one demo run, 194 of 290 textures load with mips. Nothing
+crashed, no level shows garbage, and the distant crowd is smooth instead of
+grainy. The tiled packed-mip placeholder is gone: a texture whose base level
+is in the tail now reads it from the tail.
+
+`--wwe2k15_native_mips=false` goes back to base levels only, for comparison.

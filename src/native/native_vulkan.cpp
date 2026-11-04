@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -62,6 +63,8 @@ REXCVAR_DEFINE_STRING(wwe2k15_native_dump_address, "", "Native",
 REXCVAR_DEFINE_BOOL(wwe2k15_native_msaa, true, "Native",
                     "Draw anti-aliased render targets with 2x/4x multisampling, as the game "
                     "asks (off: single-sampled)");
+REXCVAR_DEFINE_BOOL(wwe2k15_native_mips, true, "Native",
+                    "Load texture mip levels (off: the base level only)");
 REXCVAR_DEFINE_BOOL(wwe2k15_native_stream_cache, true, "Native",
                     "Keep converted vertex buffers between draws and frames while their "
                     "contents stay the same (off: convert every draw)");
@@ -303,6 +306,37 @@ int32_t TiledOffset2D(int32_t x, int32_t y, uint32_t pitch, uint32_t bytes_per_b
   int32_t offset = macro + ((micro & ~0xF) << 1) + (micro & 0xF) + ((y & 1) << 4);
   return ((offset & ~0x1FF) << 3) + ((y & 16) << 7) + ((offset & 0x1C0) << 2) +
          (((((y & 8) >> 2) + (x >> 3)) & 3) << 6) + (offset & 0x3F);
+}
+
+uint32_t Log2Floor(uint32_t value) { return 31 - uint32_t(std::countl_zero(value | 1)); }
+uint32_t Log2Ceil(uint32_t value) { return value <= 1 ? 0 : Log2Floor(value - 1) + 1; }
+uint32_t NextPow2(uint32_t value) { return 1u << Log2Ceil(value); }
+
+// The first level stored in the packed mip tail: the one whose shorter side is
+// 16 texels or less. As the SDK's texture_util::GetPackedMipLevel.
+uint32_t PackedMipLevel(uint32_t width, uint32_t height) {
+  const uint32_t log2_size = Log2Ceil(std::min(width, height));
+  return log2_size > 4 ? log2_size - 4 : 0;
+}
+
+// Texel offset of level inside the packed mip tail of a 2D texture, for a
+// level at or after PackedMipLevel. As the SDK's
+// texture_util::GetPackedMipOffset without the 3D case.
+void PackedMipOffset(uint32_t width, uint32_t height, uint32_t level, uint32_t& x,
+                     uint32_t& y) {
+  const uint32_t log2_width = Log2Ceil(width), log2_height = Log2Ceil(height);
+  const uint32_t log2_size = std::min(log2_width, log2_height);
+  const uint32_t packed_base = log2_size > 4 ? log2_size - 4 : 0;
+  const uint32_t packed = level - packed_base;
+  x = y = 0;
+  if (packed < 3) {
+    // 16, 8 and 4 texels from the corner, across the shorter side.
+    (log2_width > log2_height ? y : x) = 16 >> packed;
+  } else if (log2_width > log2_height) {
+    x = (1u << (log2_width - packed_base)) >> (packed - 2);
+  } else {
+    y = (1u << (log2_height - packed_base)) >> (packed - 2);
+  }
 }
 
 // XenosRecomp's SPEC_CONSTANT_ALPHA_TEST and where its pixel shaders read
@@ -711,10 +745,10 @@ class VulkanCore {
     if (frame % 600 == 0 || now - last_report_ > std::chrono::seconds(5)) {
       last_report_ = now;
       REXGPU_INFO("[native] frame {}: {} draws, {} drawn, skipped {} (primitive) {} (pipeline), "
-                  "{} pipelines, {} textures ({} tiled placeholders), {} shaders missing, "
+                  "{} pipelines, {} textures ({} loaded with mips), {} shaders missing, "
                   "{} render targets, {} resolves",
                   frame, frame_draws_, drawn_, skipped_primitive_, skipped_pipeline_,
-                  pipelines_.size(), textures_.size(), tiled_placeholders_,
+                  pipelines_.size(), textures_.size(), mipped_textures_,
                   missing_shaders_.size(), render_targets_.size(), resolves_);
       REXGPU_INFO("[native] frame {} uploads: {} KB of vertices converted, {} KB cached, from {} "
                   "buffers, ring {} KB, {} ring overflows, {} descriptor overflows; stream cache "
@@ -2224,25 +2258,21 @@ class VulkanCore {
                   uint32_t(fetch.sign_w), uint32_t(fetch.num_format), int32_t(fetch.exp_adjust),
                   uint32_t(fetch.swizzle), uint32_t(fetch.endianness), uint32_t(fetch.tiled));
     }
-    const uint32_t blocks_x = (width + block - 1) / block, blocks_y = (height + block - 1) / block;
-    // The base level of a small tiled texture with packed mips sits inside the
-    // mip tail; not handled yet.
-    if (fetch.tiled && fetch.packed_mips && std::min(width, height) <= 16) {
-      ++tiled_placeholders_;
-      return texture;
-    }
+    // Mip levels 1 and up are stored under mip_address (section 20.20).
+    const uint32_t levels =
+        1 + (fetch.mip_address && REXCVAR_GET(wwe2k15_native_mips)
+                 ? std::min<uint32_t>(fetch.mip_max_level, Log2Floor(std::max(width, height)))
+                 : 0);
+    // Levels whose shorter side is 16 texels or less share one 32x32 tile, the
+    // packed mip tail, stored like the level packed_level.
+    const uint32_t packed_level = fetch.packed_mips ? PackedMipLevel(width, height) : UINT32_MAX;
     const uint32_t pitch_texels = std::max<uint32_t>(fetch.pitch * 32, width);
-    // Linear rows are padded to the pitch (in texels / 32) and 256 bytes.
-    uint32_t row_bytes = (pitch_texels + block - 1) / block * block_bytes;
-    row_bytes = (row_bytes + 255) & ~255u;
-    const uint32_t tight_row = blocks_x * block_bytes;
-    const VkDeviceSize upload_size = VkDeviceSize(tight_row) * blocks_y;
 
     VkImageCreateInfo image_info{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     image_info.imageType = VK_IMAGE_TYPE_2D;
     image_info.format = format;
     image_info.extent = {width, height, 1};
-    image_info.mipLevels = 1;
+    image_info.mipLevels = levels;
     image_info.arrayLayers = 1;
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -2252,33 +2282,81 @@ class VulkanCore {
                                                      texture.image, texture.memory)) {
       return Texture{};
     }
-    // Guest data (physical memory) -> staging with endian swap.
+    // Guest data (physical memory) -> staging with endian swap, level by level.
     auto* memory = rex::system::kernel_memory();
-    const uint8_t* src = memory->TranslatePhysical(fetch.base_address << 12);
-    std::vector<uint8_t> data(upload_size);
     if (fetch.tiled) {
-      REXGPU_INFO("[native] untiling texture {:08X}: format {} {}x{} pitch {}",
+      REXGPU_INFO("[native] untiling texture {:08X}: format {} {}x{} pitch {} levels {}{}",
                   fetch.base_address << 12, uint32_t(fetch.format), width, height,
-                  pitch_texels);
-      // Tiled: each block is found through the 32x32-block tile layout.
-      const uint32_t pitch_blocks = (pitch_texels + block - 1) / block;
-      const uint32_t bpb_log2 = block_bytes == 1 ? 0 : block_bytes == 4 ? 2 : block_bytes == 8 ? 3 : 4;
+                  pitch_texels, levels, packed_level != UINT32_MAX ? " packed" : "");
+    }
+    const uint32_t bpb_log2 = block_bytes == 1 ? 0 : block_bytes == 4 ? 2 : block_bytes == 8 ? 3 : 4;
+    std::vector<uint8_t> data;
+    std::vector<VkBufferImageCopy> regions;
+    // Copies one level, whose storage starts at address with this pitch (in
+    // blocks), from block (offset_x, offset_y) of that storage.
+    auto copy_level = [&](uint32_t level, uint32_t address, uint32_t pitch_blocks,
+                          uint32_t offset_x, uint32_t offset_y) {
+      const uint32_t level_width = std::max(width >> level, 1u);
+      const uint32_t level_height = std::max(height >> level, 1u);
+      const uint32_t blocks_x = (level_width + block - 1) / block;
+      const uint32_t blocks_y = (level_height + block - 1) / block;
+      const uint32_t tight_row = blocks_x * block_bytes;
+      // Linear rows are padded to 256 bytes.
+      const uint32_t row_bytes = (pitch_blocks * block_bytes + 255) & ~255u;
+      const size_t start = data.size();
+      data.resize(start + size_t(tight_row) * blocks_y);
+      const uint8_t* src = memory->TranslatePhysical(address);
       for (uint32_t y = 0; y < blocks_y; ++y) {
-        for (uint32_t x = 0; x < blocks_x; ++x) {
-          const int32_t offset = TiledOffset2D(int32_t(x), int32_t(y), pitch_blocks, bpb_log2);
-          std::memcpy(data.data() + size_t(y) * tight_row + size_t(x) * block_bytes,
-                      src + offset, block_bytes);
+        uint8_t* dst = data.data() + start + size_t(y) * tight_row;
+        if (fetch.tiled) {
+          // Tiled: each block is found through the 32x32-block tile layout.
+          for (uint32_t x = 0; x < blocks_x; ++x) {
+            const int32_t offset = TiledOffset2D(int32_t(offset_x + x), int32_t(offset_y + y),
+                                                 pitch_blocks, bpb_log2);
+            std::memcpy(dst + size_t(x) * block_bytes, src + offset, block_bytes);
+          }
+        } else {
+          std::memcpy(dst, src + size_t(offset_y + y) * row_bytes + size_t(offset_x) * block_bytes,
+                      tight_row);
         }
       }
-    } else {
-      for (uint32_t y = 0; y < blocks_y; ++y) {
-        std::memcpy(data.data() + size_t(y) * tight_row, src + size_t(y) * row_bytes, tight_row);
+      VkBufferImageCopy region{};
+      region.bufferOffset = start;
+      region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, level, 0, 1};
+      region.imageExtent = {level_width, level_height, 1};
+      regions.push_back(region);
+    };
+    // The base level uses the fetch constant's pitch. A base inside the mip
+    // tail sits at its packed offset there.
+    uint32_t tail_x = 0, tail_y = 0;
+    if (packed_level == 0) PackedMipOffset(width, height, 0, tail_x, tail_y);
+    copy_level(0, fetch.base_address << 12, (pitch_texels + block - 1) / block, tail_x / block,
+               tail_y / block);
+    // Mips are stored as if the base size were a power of two: level n has
+    // next_pow2(size) >> n texels, padded to 32x32 blocks and to 4 KB.
+    uint32_t mip_offset = 0;
+    for (uint32_t level = 1; level < levels; ++level) {
+      const uint32_t stored = std::min(level, packed_level);
+      auto stored_blocks = [&](uint32_t size, uint32_t stored_level) {
+        const uint32_t texels = std::max(NextPow2(size) >> stored_level, 1u);
+        return (((texels + block - 1) / block) + 31) & ~31u;
+      };
+      const uint32_t pitch_blocks = stored_blocks(width, stored);
+      tail_x = tail_y = 0;
+      if (level >= packed_level) PackedMipOffset(width, height, level, tail_x, tail_y);
+      copy_level(level, (fetch.mip_address << 12) + mip_offset, pitch_blocks, tail_x / block,
+                 tail_y / block);
+      if (level < packed_level) {
+        uint32_t row_bytes = pitch_blocks * block_bytes;
+        if (!fetch.tiled) row_bytes = (row_bytes + 255) & ~255u;
+        mip_offset += (row_bytes * stored_blocks(height, stored) + 4095) & ~4095u;
       }
     }
     SwapEndian(data, fetch.endianness);
-    if (!UploadImage(texture.image, width, height, data)) {
+    if (!UploadImage(texture.image, levels, regions, data)) {
       return Texture{};
     }
+    if (levels > 1) ++mipped_textures_;
     VkImageViewCreateInfo view_info{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     view_info.image = texture.image;
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -2289,7 +2367,7 @@ class VulkanCore {
                             ViewSwizzle(fetch.swizzle, 1, single_channel),
                             ViewSwizzle(fetch.swizzle, 2, single_channel),
                             ViewSwizzle(fetch.swizzle, 3, single_channel)};
-    view_info.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    view_info.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, levels, 0, 1};
     device_->functions().vkCreateImageView(device_->device(), &view_info, nullptr, &texture.view);
     return texture;
   }
@@ -2334,8 +2412,17 @@ class VulkanCore {
     }
   }
 
-  // Synchronous upload through a staging buffer on a separate command buffer.
   bool UploadImage(VkImage image, uint32_t width, uint32_t height,
+                   const std::vector<uint8_t>& data) {
+    VkBufferImageCopy region{};
+    region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+    region.imageExtent = {width, height, 1};
+    return UploadImage(image, 1, {region}, data);
+  }
+
+  // Synchronous upload through a staging buffer on a separate command buffer;
+  // regions fill levels 0 to levels - 1.
+  bool UploadImage(VkImage image, uint32_t levels, const std::vector<VkBufferImageCopy>& regions,
                    const std::vector<uint8_t>& data) {
     const auto& dfn = device_->functions();
     const VkDevice device = device_->device();
@@ -2365,15 +2452,13 @@ class VulkanCore {
     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.image = image;
-    barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, levels, 0, 1};
     dfn.vkCmdPipelineBarrier(upload_buffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                              VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1,
                              &barrier);
-    VkBufferImageCopy region{};
-    region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
-    region.imageExtent = {width, height, 1};
     dfn.vkCmdCopyBufferToImage(upload_buffer_, staging, image,
-                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, uint32_t(regions.size()),
+                               regions.data());
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -3058,7 +3143,8 @@ class VulkanCore {
   std::unordered_map<uint64_t, CachedTexture> textures_;
 
   uint32_t frame_draws_ = 0, drawn_ = 0, skipped_primitive_ = 0, skipped_pipeline_ = 0;
-  uint32_t tiled_placeholders_ = 0, ring_overflows_ = 0, descriptor_overflows_ = 0;
+  uint32_t ring_overflows_ = 0, descriptor_overflows_ = 0;
+  uint32_t mipped_textures_ = 0;  // created with more than one level, ever
   uint64_t vertex_bytes_ = 0;
   std::unordered_map<uint32_t, bool> frame_streams_;
   std::chrono::steady_clock::time_point last_report_, frame_start_;

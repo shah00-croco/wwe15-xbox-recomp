@@ -482,8 +482,13 @@ void wwe2k15::native::NativeOnIndexedDraw(uint8_t* base, uint32_t dev, uint32_t 
   for (uint32_t i = 0; i < index_count; ++i) {
     const uint32_t index =
         index32 ? REX_LOAD_U32(indices + i * 4) : uint32_t(REX_LOAD_U16(indices + i * 2));
+    // The reset index becomes Vulkan's 32-bit restart value (section 20.21).
+    if (index == restart) {
+      state.indices[i] = 0xFFFFFFFFu;
+      continue;
+    }
     state.indices[i] = index;
-    if (index != restart) max_index = std::max(max_index, index);
+    max_index = std::max(max_index, index);
   }
   ReadDeviceState(base, dev, state);
 

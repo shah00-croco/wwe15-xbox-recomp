@@ -378,6 +378,7 @@ enum class AlphaTest { kOff, kOn, kRejectAll };
 // kGreater is treated the same; the other functions are not supported yet.
 constexpr uint32_t kAlphaToMaskBit = 1u << 4;  // RB_COLORCONTROL alpha_to_mask_enable
 constexpr uint32_t kCullBits = 0x7;  // PA_SU_SC_MODE_CNTL cull_front, cull_back, face
+constexpr uint32_t kRestartBit = 1u << 21;  // PA_SU_SC_MODE_CNTL multi_prim_ib_ena
 
 AlphaTest GetAlphaTest(const NativeDrawState& state) {
   reg::RB_COLORCONTROL color_control;
@@ -1831,7 +1832,7 @@ class VulkanCore {
     key = Fnv1a(&topology, sizeof(topology), key);
     const bool stencil = state.depth_control & 1;
     const uint32_t render_state[8] = {state.blend_control,
-                                      state.mode_control & kCullBits,
+                                      state.mode_control & (kCullBits | kRestartBit),
                                       state.color_mask & 0xF,
                                       uint32_t(GetAlphaTest(state)),
                                       state.color_control & kAlphaToMaskBit,
@@ -1920,6 +1921,11 @@ class VulkanCore {
     VkPipelineInputAssemblyStateCreateInfo input_assembly{
         VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
     input_assembly.topology = topology;
+    // Strips and fans restart at index 0xFFFFFFFF, which NativeOnIndexedDraw
+    // writes for the game's reset index (section 20.21). Lists cannot restart
+    // in core Vulkan.
+    input_assembly.primitiveRestartEnable =
+        (state.mode_control & kRestartBit) && topology != VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     VkPipelineViewportStateCreateInfo viewport_state{
         VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
     viewport_state.viewportCount = 1;

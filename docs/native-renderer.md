@@ -2899,3 +2899,41 @@ grainy. The tiled packed-mip placeholder is gone: a texture whose base level
 is in the tail now reads it from the tail.
 
 `--wwe2k15_native_mips=false` goes back to base levels only, for comparison.
+
+### 20.21 Primitive restart: the missing shoes (2026-11-04)
+
+**Symptom.** Some wrestlers had no feet. In the emulator, Daniel Bryan's red
+kick pads end in black shoes. Natively the shoe was missing, the open end of
+the pad showed, and a thin black spike stuck out of it. The other wrestler's
+black boots were fine. Older native shots show the same, so it was not caused
+by face culling (20.19) or mips (20.20).
+
+**Ruled out.**
+- Turning the alpha test off did not bring the shoe back.
+- The stream cache (20.15) checks a full hash of the data, so it cannot serve
+  stale vertices.
+- Bone matrices: a check of every skinned draw found valid matrices for every
+  bone with weight in the main pass.
+- Blend indices are `UBYTE4` (`001A2286`), and the weights are
+  `k_32_32_32_FLOAT` or `k_32_FLOAT`. All of them map to the right Vulkan
+  formats.
+
+**Cause.** Some meshes are triangle strips cut into pieces with the reset
+index `0xFFFF`. `PA_SU_SC_MODE_CNTL` bit 21 (`multi_prim_ib_ena`) is set for
+them (mode `00218000` and `00218006`). One draw of 1,380 indices has 60
+resets. Native widened the indices to 32 bits and drew without primitive
+restart, so `0xFFFF` was an ordinary index. It pointed past the vertex buffer,
+and the triangles around each reset joined the strip pieces through one
+garbage vertex. That made the spike and lost the rest of the shoe.
+
+**Fix.**
+- `NativeOnIndexedDraw` writes the reset index (`0xFFFF`, or `0xFFFFFFFF` for
+  32-bit indices) as `0xFFFFFFFF`, Vulkan's restart value for `UINT32`
+  indices. It no longer counts towards the highest vertex copied.
+- The pipeline enables `primitiveRestartEnable` for strips and fans when bit
+  21 is set. The bit is part of the pipeline key.
+- Lists cannot restart in core Vulkan. In three demo runs every draw with
+  reset indices was a strip with bit 21 set.
+
+**Result.** The shoes and soles render in all shots of two runs, including
+green sneakers and boots under long trousers.
